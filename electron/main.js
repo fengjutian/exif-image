@@ -1,0 +1,188 @@
+import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import squirrel from 'electron-squirrel-startup'
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+if (squirrel) {
+  app.quit()
+}
+
+let mainWindow;
+
+const createWindow = () => {
+  // Create the browser window.
+  mainWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      sandbox: false,
+      contextIsolation: true,
+      nodeIntegration: false,
+      webSecurity: false
+    },
+  })
+
+  // and load the index.html of the app.
+  // Use globalThis.process for compatibility in ES modules
+  const viteDevServerUrl = globalThis.process?.env?.VITE_DEV_SERVER_URL;
+  if (viteDevServerUrl) {
+    mainWindow.loadURL(viteDevServerUrl)
+  } else {
+    mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'))
+  }
+
+  // Open the DevTools.
+  mainWindow.webContents.openDevTools()
+
+  buildMenu();
+}
+
+function buildMenu() {
+  const template = [
+    {
+      label: '打开文件夹',
+      submenu: [
+        {
+          label: '打开文件夹…',
+          accelerator: 'CmdOrCtrl+Shift+O',
+          click: async () => {
+            const result = await dialog.showOpenDialog(mainWindow, {
+              // properties: ['openDirectory']   // 只允许选文件夹
+              // properties: ['openDirectory', 'openFile', 'multiSelections'],
+              // filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif'] }]
+
+              properties: ['openDirectory',  'multiSelections'],
+              filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif'] }]
+            });
+
+            if (!result.canceled && result.filePaths.length > 0) {
+              const dirPath = result.filePaths[0];
+
+              // 方式 A：直接把文件夹在系统资源管理器/访达里打开
+              // shell.openPath(dirPath);
+
+              // 方式 B：把路径发给你的渲染进程，自己渲染目录内容
+              mainWindow.webContents.send('dir-selected', dirPath);
+            }
+          }
+        },
+        { type: 'separator' },
+        { role: 'quit' }
+      ]
+    }
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
+const menu = Menu.buildFromTemplate([{
+  label: '选择文件夹',
+  click: async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ['openDirectory']
+    })
+    if (!result.canceled) {
+      console.log('选中路径:', result.filePaths)
+    }
+  }
+}])
+Menu.setApplicationMenu(menu)
+
+
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
+app.on('ready', createWindow)
+
+// Quit when all windows are closed, except on macOS. There, it's common
+// for applications and their menu bar to stay active until the user quits
+// explicitly with Cmd + Q.
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
+})
+
+// main.js
+
+// 支持的图片扩展名
+const IMG_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.tiff'];
+
+ipcMain.handle('get-images-in-dir', async (_, dirPath) => {
+  try {
+    const files = fs.readdirSync(dirPath, { withFileTypes: true });
+    // 过滤掉子目录、过滤扩展名
+    return files
+      .filter(f => f.isFile() && IMG_EXT.includes(path.extname(f.name).toLowerCase()))
+      .map(f => path.join(dirPath, f.name));   // 返回绝对路径
+  } catch (err) {
+    console.error(err);
+    return [];
+  }
+});
+
+app.on('activate', () => {
+  // On OS X it's common to re-create a window in the app when the
+  // dock icon is clicked and there are no other windows open.
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createWindow()
+  }
+})
+
+// In this file you can include the rest of your app's specific main process
+// code. You can also put them in separate files and import them here.
+
+
+
+ipcMain.handle('open-file-dialog', async () => {
+  try {
+    const result = await dialog.showOpenDialog({
+      properties: ['openFile', 'multiSelections'],
+      filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif'] }]
+    });
+    if (result.canceled) {
+      return null;
+    }
+    return result.filePaths;
+  } catch (err) {
+    console.error('Failed to open dialog', err);
+    return [];
+  }
+});
+
+
+ipcMain.handle('open-folder-dialog', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openDirectory', 'openFile'],
+    filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif'] }]
+  })
+  return result.filePaths
+
+  //   try {
+  //   const result = await dialog.showOpenDialog({
+  //     properties: ['openFile', 'multiSelections'],
+  //     filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif'] }]
+  //   });
+  //   if (result.canceled) {
+  //     return null;
+  //   }
+  //   return result.filePaths;
+  // } catch (err) {
+  //   console.error('Failed to open dialog', err);
+  //   return [];
+  // }
+})
+
+ipcMain.handle('get-folder-images', async (_, folderPath) => {
+  console.log('11111111:', folderPath);
+  const files = fs.readdirSync(folderPath)
+  return files.filter(file => {
+    const ext = path.extname(file).toLowerCase()
+    return ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(ext)
+  }).map(file => path.join(folderPath, file))
+})
