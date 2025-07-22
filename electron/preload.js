@@ -11,11 +11,3 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('dir-selected', (_e, value) => callback(value));
   }
 })
-
-// renderer.js
-// const { ipcRenderer } = require('electron');
-
-// ipcRenderer.on('dir-selected', (e, dirPath) => {
-//   console.log('用户选了目录：', dirPath);
-//   // 这里你可以用 fs.readdir(dirPath) 把文件读出来渲染
-// });

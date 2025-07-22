@@ -7,7 +7,6 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (squirrel) {
   app.quit()
 }
@@ -28,8 +27,6 @@ const createWindow = () => {
     },
   })
 
-  // and load the index.html of the app.
-  // Use globalThis.process for compatibility in ES modules
   const viteDevServerUrl = globalThis.process?.env?.VITE_DEV_SERVER_URL;
   if (viteDevServerUrl) {
     mainWindow.loadURL(viteDevServerUrl)
@@ -53,12 +50,10 @@ function buildMenu() {
           accelerator: 'CmdOrCtrl+Shift+O',
           click: async () => {
             const result = await dialog.showOpenDialog(mainWindow, {
-              // properties: ['openDirectory']   // 只允许选文件夹
-              // properties: ['openDirectory', 'openFile', 'multiSelections'],
-              // filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif'] }]
-
-              properties: ['openDirectory',  'multiSelections'],
-              filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif'] }]
+              properties: ['openFile',  'multiSelections'],
+              filters: [
+                { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif']},
+                { name: '所有文件', extensions: ['*'] }]
             });
 
             if (!result.canceled && result.filePaths.length > 0) {
@@ -93,22 +88,13 @@ const menu = Menu.buildFromTemplate([{
 }])
 Menu.setApplicationMenu(menu)
 
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.on('ready', createWindow)
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
-
-// main.js
 
 // 支持的图片扩展名
 const IMG_EXT = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.tiff'];
@@ -127,17 +113,10 @@ ipcMain.handle('get-images-in-dir', async (_, dirPath) => {
 });
 
 app.on('activate', () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow()
   }
 })
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
-
-
 
 ipcMain.handle('open-file-dialog', async () => {
   try {
@@ -162,20 +141,6 @@ ipcMain.handle('open-folder-dialog', async () => {
     filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif'] }]
   })
   return result.filePaths
-
-  //   try {
-  //   const result = await dialog.showOpenDialog({
-  //     properties: ['openFile', 'multiSelections'],
-  //     filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif'] }]
-  //   });
-  //   if (result.canceled) {
-  //     return null;
-  //   }
-  //   return result.filePaths;
-  // } catch (err) {
-  //   console.error('Failed to open dialog', err);
-  //   return [];
-  // }
 })
 
 ipcMain.handle('get-folder-images', async (_, folderPath) => {

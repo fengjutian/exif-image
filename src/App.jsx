@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Viewer from 'viewerjs';
 import 'viewerjs/dist/viewer.css';
-import EXIF from 'exif-js';
 import './App.css';
 import "@radix-ui/themes/styles.css";
 
@@ -11,7 +10,6 @@ function App() {
   // const [exifData, setExifData] = useState({});
   const viewerRef = useRef(null);
   const galleryRef = useRef(null);
-  const [dir, setDir] = useState('');
 
   useEffect(() => {
     if (images.length > 0 && galleryRef.current) {
@@ -27,29 +25,14 @@ function App() {
   }, [images]);
 
 
-  // const handleOpenFolder = async () => {
-  //   try {
-  //     const folderPaths = await window.electronAPI.openFolderDialog()
-  //     if (!folderPaths || folderPaths.length === 0) return
-  //     const folderPath = folderPaths[0] // 取第一个选中的文件夹
-  //     const imagePaths = await window.electronAPI.getFolderImages(folderPath)
-  //     const imageURLs = imagePaths.map(p => `file://${p}`)
-  //     setImages(imageURLs)
-  //   } catch (error) {
-  //     console.error('Error loading images:', error)
-  //   }
-  // }
-
-
   useEffect(() => {
     // 定义真正的处理函数
     const handler = async (folderPaths) => {
       console.log('收到文件夹:', folderPaths);
-      setDir(folderPaths);   // 触发组件重渲染
+      // setDir(folderPaths);   // 触发组件重渲染
 
       try {
-        // const folderPaths = await window.electronAPI.openFolderDialog()
-        if (!folderPaths || folderPaths.length === 0) return
+        // if (!folderPaths || folderPaths.length === 0) return
 
         console.log('选择的文件夹路径:', folderPaths);
 
@@ -73,33 +56,13 @@ function App() {
     };
   }, []);
 
-  // const readExifData = (imageFiles) => {
-  //   const allExifData = {};
-  //   imageFiles.forEach(imageSrc => {
-  //     const img = new Image();
-  //     img.src = imageSrc;
-  //     img.onload = () => {
-  //       EXIF.getData(img, function() {
-  //         const data = EXIF.getAllTags(this);
-  //         allExifData[imageSrc] = data;
-  //         setExifData({ ...allExifData });
-  //       });
-  //     };
-  //   });
-  // };
 
   return (
     <div className="App">
-      {/* <button onClick={handleOpenFolder}>选择文件夹</button> */}
       <div ref={galleryRef} className="gallery">
         {images && images.map((src, index) => (
           <img key={index} src={src} alt={`Image ${index}`} />
         ))}
-      </div>
-
-      <div>
-        <h3>当前目录：</h3>
-        <p>{dir || '未选择'}</p>
       </div>
     </div>
   );
