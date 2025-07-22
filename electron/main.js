@@ -49,6 +49,24 @@ function buildMenu() {
           label: '打开文件夹…',
           accelerator: 'CmdOrCtrl+Shift+O',
           click: async () => {
+
+            // eslint-disable-next-line no-undef
+            switch (process.platform) {
+              case 'win32':
+                console.log('当前系统是 Windows');
+                // 执行 Windows 特有的代码
+                break;
+              case 'darwin':
+                console.log('当前系统是 macOS');
+                // 执行 macOS 特有的代码
+                break;
+              case 'linux':
+                console.log('当前系统是 Linux');
+                // 执行 Linux 特有的代码
+                break;
+              default:
+                console.log('未知的操作系统');
+            }
             const result = await dialog.showOpenDialog(mainWindow, {
               properties: ['openFile',  'multiSelections'],
               filters: [
