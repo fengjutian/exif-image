@@ -49,26 +49,18 @@ function buildMenu() {
           label: '打开文件夹…',
           accelerator: 'CmdOrCtrl+Shift+O',
           click: async () => {
-
+            let _properties = ['multiSelections'];
             // eslint-disable-next-line no-undef
-            switch (process.platform) {
-              case 'win32':
-                console.log('当前系统是 Windows');
-                // 执行 Windows 特有的代码
-                break;
-              case 'darwin':
-                console.log('当前系统是 macOS');
-                // 执行 macOS 特有的代码
-                break;
-              case 'linux':
-                console.log('当前系统是 Linux');
-                // 执行 Linux 特有的代码
-                break;
-              default:
-                console.log('未知的操作系统');
+            if (process.platform === 'darwin') {
+              _properties.push('openDirectory');
+            // eslint-disable-next-line no-undef
+            } else if(process.platform === 'win32') {
+              _properties.push('openFile');
+
             }
+
             const result = await dialog.showOpenDialog(mainWindow, {
-              properties: ['openFile',  'multiSelections'],
+              properties: _properties,
               filters: [
                 { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif']},
                 { name: '所有文件', extensions: ['*'] }]

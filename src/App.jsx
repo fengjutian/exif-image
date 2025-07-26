@@ -3,11 +3,11 @@ import Viewer from 'viewerjs';
 import 'viewerjs/dist/viewer.css';
 import './App.css';
 import "@radix-ui/themes/styles.css";
+import ImgList from './Img.jsx';
 
 
 function App() {
   const [images, setImages] = useState([]);
-  // const [exifData, setExifData] = useState({});
   const viewerRef = useRef(null);
   const galleryRef = useRef(null);
 
@@ -32,15 +32,17 @@ function App() {
       // setDir(folderPaths);   // 触发组件重渲染
 
       try {
-        // if (!folderPaths || folderPaths.length === 0) return
+        // const folderPath = folderPaths
+        // const imagePaths = await window.electronAPI.getFolderImages(folderPath)
+        // console.log('imagePaths111111:', imagePaths)
+        // const imageURLs = imagePaths.map(p => `file://${p}`)
+        // setImages(imageURLs)
 
-        console.log('选择的文件夹路径:', folderPaths);
+        const imageURLs = [`file://${folderPaths}`];
+        console.log('imageURLs:', imageURLs);
 
-        const folderPath = folderPaths // 取第一个选中的文件夹
-        const imagePaths = await window.electronAPI.getFolderImages(folderPath)
-        console.log('imagePaths111111:', imagePaths)
-        const imageURLs = imagePaths.map(p => `file://${p}`)
-        setImages(imageURLs)
+        setImages([...imageURLs]);
+        console.log('更新后的 images:', images);
       } catch (error) {
         console.error('Error loading images:', error)
       }
@@ -64,6 +66,8 @@ function App() {
           <img key={index} src={src} alt={`Image ${index}`} />
         ))}
       </div>
+
+      <ImgList />
     </div>
   );
 }

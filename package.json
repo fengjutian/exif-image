@@ -11,8 +11,8 @@
     "directories": {
       "output": "build",
       "app": "./dist/electron"
-  }
- },
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -25,6 +25,9 @@
     "make": "electron-forge make"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^7.2.0",
     "@radix-ui/themes": "^3.2.1",
     "electron-squirrel-startup": "^1.0.1",
     "exif-js": "^2.3.0",
